@@ -43,19 +43,19 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
         return Span(zeroTo: [endIndex])
     }
 
-    public func withUnsafeBufferPointer<R>(@noescape body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeBufferPointer<R>(_ body: @noescape(UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
         return try body(UnsafeBufferPointer(start: mutablePointer, count: count))
     }
 
-    public func withUnsafePointer<R>(@noescape body: (UnsafePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafePointer<R>(_ body: @noescape(UnsafePointer<Element>) throws -> R) rethrows -> R {
         return try body(mutablePointer)
     }
 
-    public func withUnsafeMutableBufferPointer<R>(@noescape body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBufferPointer<R>(_ body: @noescape(UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
         return try body(UnsafeMutableBufferPointer(start: mutablePointer, count: count))
     }
 
-    public func withUnsafeMutablePointer<R>(@noescape body: (UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutablePointer<R>(_ body: @noescape(UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
         return try body(mutablePointer)
     }
 
@@ -65,21 +65,21 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
 
     /// Construct an uninitialized ValueArray with the given capacity
     public required init(capacity: Int) {
-        mutablePointer = UnsafeMutablePointer<Element>.alloc(capacity)
+        mutablePointer = UnsafeMutablePointer<Element>(allocatingCapacity: capacity)
         self.capacity = capacity
         self.count = 0
     }
 
     /// Construct an uninitialized ValueArray with the given size
     public required init(count: Int) {
-        mutablePointer = UnsafeMutablePointer<Element>.alloc(count)
+        mutablePointer = UnsafeMutablePointer<Element>(allocatingCapacity: count)
         self.capacity = count
         self.count = count
     }
 
     /// Construct a ValueArray from an array literal
     public required init(arrayLiteral elements: Element...) {
-        mutablePointer = UnsafeMutablePointer<Element>.alloc(elements.count)
+        mutablePointer = UnsafeMutablePointer<Element>(allocatingCapacity: elements.count)
         self.capacity = elements.count
         self.count = elements.count
         mutablePointer.initializeFrom(elements)
@@ -87,7 +87,7 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
 
     /// Construct a ValueArray from contiguous memory
     public required init<C: LinearType where C.Element == Element>(_ values: C) {
-        mutablePointer = UnsafeMutablePointer<Element>.alloc(values.count)
+        mutablePointer = UnsafeMutablePointer<Element>(allocatingCapacity: values.count)
         capacity = values.count
         count = values.count
         values.withUnsafeBufferPointer { pointer in
@@ -99,7 +99,7 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
 
     /// Construct a ValueArray of `count` elements, each initialized to `repeatedValue`.
     public required init(count: Int, repeatedValue: Element) {
-        mutablePointer = UnsafeMutablePointer<Element>.alloc(count)
+        mutablePointer = UnsafeMutablePointer<Element>(allocatingCapacity: count)
         capacity = count
         self.count = count
         for i in 0..<count {
@@ -109,7 +109,7 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
     
     /// Construct a ValueArray of `count` elements, each initialized with `initializer`.
     public required init(count: Int, initializer: () -> Element) {
-        mutablePointer = UnsafeMutablePointer<Element>.alloc(count)
+        mutablePointer = UnsafeMutablePointer<Element>(allocatingCapacity: count)
         capacity = count
         self.count = count
         for i in 0..<count {
@@ -118,7 +118,7 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
     }
 
     deinit {
-        mutablePointer.dealloc(capacity)
+        mutablePointer.deallocateCapacity(capacity)
     }
     
     public subscript(index: Index) -> Element {
@@ -169,6 +169,14 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
             self[intervals[0]] = newValue
         }
     }
+
+    public func index(after i: Int) -> Int {
+        return i + 1
+    }
+
+    public func formIndex(after i: inout Int) {
+        i += 1
+    }
     
     public func copy() -> ValueArray {
         let copy = ValueArray(count: capacity)
@@ -176,22 +184,22 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
         return copy
     }
 
-    public func append(value: Element) {
+    public func append(_ value: Element) {
         precondition(count + 1 <= capacity)
         mutablePointer[count] = value
         count += 1
     }
 
-    public func appendContentsOf<C: CollectionType where C.Generator.Element == Element>(values: C) {
+    public func appendContentsOf<C: Collection where C.Iterator.Element == Element>(_ values: C) {
         precondition(count + Int(values.count.toIntMax()) <= capacity)
         let endPointer = mutablePointer + count
         endPointer.initializeFrom(values)
         count += Int(values.count.toIntMax())
     }
 
-    public func replaceRange<C: CollectionType where C.Generator.Element == Element>(subRange: Range<Index>, with newElements: C) {
-        assert(subRange.startIndex >= startIndex && subRange.endIndex <= endIndex)
-        (mutablePointer + subRange.startIndex).initializeFrom(newElements)
+    public func replaceRange<C: Collection where C.Iterator.Element == Element>(_ subRange: Range<Index>, with newElements: C) {
+        assert(subRange.lowerBound >= startIndex && subRange.upperBound <= endIndex)
+        (mutablePointer + subRange.lowerBound).initializeFrom(newElements)
     }
     
     public func toRowMatrix() -> Matrix<Element> {
@@ -207,9 +215,9 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
         for v in self {
             string += "\(v.description), "
         }
-        if string.startIndex.distanceTo(string.endIndex) > 1 {
-            let range = string.endIndex.advancedBy(-2)..<string.endIndex
-            string.replaceRange(range, with: "]")
+        if string.distance(from: string.startIndex, to: string.endIndex) > 1 {
+            let range = string.index(string.endIndex, offsetBy: -2)..<string.endIndex
+            string.replaceSubrange(range, with: "]")
         } else {
             string += "]"
         }
@@ -223,7 +231,7 @@ public class ValueArray<Element: Value>: MutableLinearType, ArrayLiteralConverti
 
 // MARK: -
 
-public func swap<T>(inout lhs: ValueArray<T>, inout rhs: ValueArray<T>) {
+public func swap<T>(_ lhs: inout ValueArray<T>, rhs: inout ValueArray<T>) {
     swap(&lhs.mutablePointer, &rhs.mutablePointer)
     swap(&lhs.capacity, &rhs.capacity)
     swap(&lhs.count, &rhs.count)

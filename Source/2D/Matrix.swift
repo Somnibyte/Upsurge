@@ -33,24 +33,24 @@ public class Matrix<T: Value>: MutableQuadraticType, Equatable, CustomStringConv
         return Span(zeroTo: [rows, columns])
     }
 
-    public func withUnsafeBufferPointer<R>(@noescape body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeBufferPointer<R>(_ body: @noescape(UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeBufferPointer(body)
     }
 
-    public func withUnsafePointer<R>(@noescape body: (UnsafePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafePointer<R>(_ body: @noescape(UnsafePointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafePointer(body)
     }
 
-    public func withUnsafeMutableBufferPointer<R>(@noescape body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBufferPointer<R>(_ body: @noescape(UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeMutableBufferPointer(body)
     }
 
-    public func withUnsafeMutablePointer<R>(@noescape body: (UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutablePointer<R>(_ body: @noescape(UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeMutablePointer(body)
     }
 
     public var arrangement: QuadraticArrangement {
-        return .RowMajor
+        return .rowMajor
     }
 
     public var stride: Int {
@@ -68,7 +68,7 @@ public class Matrix<T: Value>: MutableQuadraticType, Equatable, CustomStringConv
         elements = ValueArray(count: rows * columns)
         quad.withUnsafeBufferPointer { pointer in
             for row in 0..<rows {
-                let sourcePointer = UnsafeMutablePointer<Element>(pointer.baseAddress + (row * quad.stride))
+                let sourcePointer = UnsafeMutablePointer<Element>(pointer.baseAddress! + (row * quad.stride))
                 let destPointer = elements.mutablePointer + row * columns
                 destPointer.assignFrom(sourcePointer, count: columns)
             }
@@ -104,7 +104,7 @@ public class Matrix<T: Value>: MutableQuadraticType, Equatable, CustomStringConv
 
         self.init(rows: rows, columns: cols)
 
-        for (i, row) in contents.enumerate() {
+        for (i, row) in contents.enumerated() {
             elements.replaceRange(i*cols..<i*cols+min(cols, row.count), with: row)
         }
     }
@@ -170,11 +170,11 @@ public class Matrix<T: Value>: MutableQuadraticType, Equatable, CustomStringConv
         }
     }
 
-    public func row(index: Int) -> ValueArraySlice<Element> {
+    public func row(_ index: Int) -> ValueArraySlice<Element> {
         return ValueArraySlice<Element>(base: elements, startIndex: index * columns, endIndex: (index + 1) * columns, step: 1)
     }
 
-    public func column(index: Int) -> ValueArraySlice<Element> {
+    public func column(_ index: Int) -> ValueArraySlice<Element> {
         return ValueArraySlice<Element>(base: elements, startIndex: index, endIndex: rows * columns - columns + index + 1, step: columns)
     }
 
@@ -183,7 +183,7 @@ public class Matrix<T: Value>: MutableQuadraticType, Equatable, CustomStringConv
         return Matrix(rows: rows, columns: columns, elements: copy)
     }
 
-    public func indexIsValidForRow(row: Int, column: Int) -> Bool {
+    public func indexIsValidForRow(_ row: Int, column: Int) -> Bool {
         return row >= 0 && row < rows && column >= 0 && column < columns
     }
     
@@ -191,7 +191,7 @@ public class Matrix<T: Value>: MutableQuadraticType, Equatable, CustomStringConv
         var description = ""
 
         for i in 0..<rows {
-            let contents = (0..<columns).map{"\(self[i, $0])"}.joinWithSeparator("\t")
+            let contents = (0..<columns).map{"\(self[i, $0])"}.joined(separator: "\t")
 
             switch (i, rows) {
             case (0, 1):
@@ -253,7 +253,7 @@ public func ==<T>(lhs: Matrix<T>, rhs: TwoDimensionalTensorSlice<T>) -> Bool {
 
 // MARK: -
 
-public func swap<T>(lhs: Matrix<T>, rhs: Matrix<T>) {
+public func swap<T>(_ lhs: Matrix<T>, rhs: Matrix<T>) {
     swap(&lhs.rows, &rhs.rows)
     swap(&lhs.columns, &rhs.columns)
     swap(&lhs.elements, &rhs.elements)

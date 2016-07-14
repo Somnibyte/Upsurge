@@ -53,7 +53,7 @@ public struct Complex<Element: Real>: Value {
         fatalError()
     }
 
-    public static func abs(x: Complex) -> Complex {
+    public static func abs(_ x: Complex) -> Complex {
         return Complex(real: x.magnitude, imag: 0.0)
     }
 

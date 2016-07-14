@@ -30,22 +30,22 @@ public class ComplexArraySlice<T: Real>: MutableLinearType  {
     public var step: Index
     
     public var span: Span {
-        return Span(ranges: [startIndex..<endIndex])
+        return Span(ranges: [startIndex ... endIndex - 1])
     }
 
-    public func withUnsafeBufferPointer<R>(@noescape body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeBufferPointer<R>(_ body: @noescape(UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeBufferPointer(body)
     }
 
-    public func withUnsafePointer<R>(@noescape body: (UnsafePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafePointer<R>(_ body: @noescape(UnsafePointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafePointer(body)
     }
 
-    public func withUnsafeMutableBufferPointer<R>(@noescape body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBufferPointer<R>(_ body: @noescape(UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeMutableBufferPointer(body)
     }
 
-    public func withUnsafeMutablePointer<R>(@noescape body: (UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutablePointer<R>(_ body: @noescape(UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeMutablePointer(body)
     }
     
@@ -120,6 +120,14 @@ public class ComplexArraySlice<T: Real>: MutableLinearType  {
             }
         }
     }
+
+    public func index(after i: Index) -> Index {
+        return i + 1
+    }
+
+    public func formIndex(after i: inout Index) {
+        i += 1
+    }
 }
 
 // MARK: - Equatable
@@ -129,7 +137,7 @@ public func ==<T: Real>(lhs: ComplexArraySlice<T>, rhs: ComplexArraySlice<T>) ->
         return false
     }
     
-    for (i, v) in lhs.enumerate() {
+    for (i, v) in lhs.enumerated() {
         if v != rhs[i] {
             return false
         }

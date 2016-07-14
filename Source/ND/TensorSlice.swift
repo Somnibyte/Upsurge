@@ -27,19 +27,19 @@ public class TensorSlice<Element: Value>: MutableTensorType, Equatable {
 
     public var span: Span
 
-    public func withUnsafeBufferPointer<R>(@noescape body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeBufferPointer<R>(_ body: @noescape(UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeBufferPointer(body)
     }
 
-    public func withUnsafePointer<R>(@noescape body: (UnsafePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafePointer<R>(_ body: @noescape(UnsafePointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafePointer(body)
     }
 
-    public func withUnsafeMutableBufferPointer<R>(@noescape body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBufferPointer<R>(_ body: @noescape(UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeMutableBufferPointer(body)
     }
 
-    public func withUnsafeMutablePointer<R>(@noescape body: (UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutablePointer<R>(_ body: @noescape(UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeMutablePointer(body)
     }
     
@@ -61,15 +61,15 @@ public class TensorSlice<Element: Value>: MutableTensorType, Equatable {
     public subscript(indices: Index) -> Element {
         get {
             var index = span.startIndex
-            let indexReplacementRage: Range<Int> = span.startIndex.count - indices.count..<span.startIndex.count
-            index.replaceRange(indexReplacementRage, with: indices)
+            let indexReplacementRage: CountableClosedRange<Int> = span.startIndex.count - indices.count ... span.startIndex.count - 1
+            index.replaceSubrange(indexReplacementRage, with: indices)
             assert(indexIsValid(index))
             return base[index]
         }
         set {
             var index = span.startIndex
-            let indexReplacementRage: Range<Int> = span.startIndex.count - indices.count..<span.startIndex.count
-            index.replaceRange(indexReplacementRage, with: indices)
+            let indexReplacementRage: CountableClosedRange<Int> = span.startIndex.count - indices.count ... span.startIndex.count - 1
+            index.replaceSubrange(indexReplacementRage, with: indices)
             assert(indexIsValid(index))
             base[index] = newValue
         }
@@ -114,16 +114,16 @@ public class TensorSlice<Element: Value>: MutableTensorType, Equatable {
     
     public var isContiguous: Bool {
         let onesCount: Int
-        if let index = dimensions.indexOf({ $0 != 1 }) {
+        if let index = dimensions.index(where: { $0 != 1 }) {
             onesCount = index
         } else {
             onesCount = rank
         }
         
-        let diff = (0..<rank).map({ dimensions[$0] - base.dimensions[$0] }).reverse()
+        let diff = (0..<rank).map({ dimensions[$0] - base.dimensions[$0] }).reversed()
         let fullCount: Int
-        if let index = diff.indexOf({ $0 != 0 }) where index.base < count {
-            fullCount = diff.startIndex.distanceTo(index)
+        if let index = diff.index(where: { $0 != 0 }) where index.base < count {
+            fullCount = rank - index.base
         } else {
             fullCount = rank
         }
@@ -131,10 +131,10 @@ public class TensorSlice<Element: Value>: MutableTensorType, Equatable {
         return rank - fullCount - onesCount <= 1
     }
     
-    public func indexIsValid(indices: [Int]) -> Bool {
+    public func indexIsValid(_ indices: [Int]) -> Bool {
         assert(indices.count == dimensions.count)
-        for (i, index) in indices.enumerate() {
-            if index < span[i].startIndex || span[i].endIndex <= index {
+        for (i, index) in indices.enumerated() {
+            if index < span[i].lowerBound || span[i].upperBound < index {
                 return false
             }
         }
@@ -144,48 +144,11 @@ public class TensorSlice<Element: Value>: MutableTensorType, Equatable {
 
 // MARK: - Equatable
 
-public func ==<T: Equatable>(lhs: TensorSlice<T>, rhs: TensorSlice<T>) -> Bool {
-    assert(lhs.span ≅ rhs.span)
-    for (lhsIndex, rhsIndex) in zip(lhs.span, rhs.span) {
-        if lhs[lhsIndex] != rhs[rhsIndex] {
-            return false
-        }
+public func ==<L: TensorType, R: TensorType where L.Element == R.Element, L.Element: Equatable>(lhs: L, rhs: R) -> Bool {
+    if !(lhs.span ≅ rhs.span) {
+        return false
     }
-    return true
-}
 
-public func ==<T: Equatable>(lhs: TensorSlice<T>, rhs: Tensor<T>) -> Bool {
-    assert(lhs.span ≅ rhs.span)
-    for (lhsIndex, rhsIndex) in zip(lhs.span, rhs.span) {
-        if lhs[lhsIndex] != rhs[rhsIndex] {
-            return false
-        }
-    }
-    return true
-}
-
-public func ==<T: Equatable>(lhs: TensorSlice<T>, rhs: Matrix<T>) -> Bool {
-    assert(lhs.span ≅ rhs.span)
-    for (lhsIndex, rhsIndex) in zip(lhs.span, rhs.span) {
-        if lhs[lhsIndex] != rhs[rhsIndex] {
-            return false
-        }
-    }
-    return true
-}
-
-public func ==<T: Equatable>(lhs: TensorSlice<T>, rhs: MatrixSlice<T>) -> Bool {
-    assert(lhs.span ≅ rhs.span)
-    for (lhsIndex, rhsIndex) in zip(lhs.span, rhs.span) {
-        if lhs[lhsIndex] != rhs[rhsIndex] {
-            return false
-        }
-    }
-    return true
-}
-
-public func ==<T>(lhs: TensorSlice<T>, rhs: TwoDimensionalTensorSlice<T>) -> Bool {
-    assert(lhs.span ≅ rhs.span)
     for (lhsIndex, rhsIndex) in zip(lhs.span, rhs.span) {
         if lhs[lhsIndex] != rhs[rhsIndex] {
             return false

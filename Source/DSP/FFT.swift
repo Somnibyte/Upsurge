@@ -30,7 +30,7 @@ public class FFTDouble {
     public init(inputLength: Int) {
         let maxLengthLog2 = vDSP_Length(ceil(log2(Double(inputLength))))
         maxLength = vDSP_Length(exp2(Double(maxLengthLog2)))
-        setup = vDSP_create_fftsetupD(maxLengthLog2, FFTRadix(kFFTRadix2))
+        setup = vDSP_create_fftsetupD(maxLengthLog2, FFTRadix(kFFTRadix2))!
 
         real = ValueArray<Double>(count: Int(maxLength))
         imag = ValueArray<Double>(count: Int(maxLength))
@@ -41,7 +41,7 @@ public class FFTDouble {
     }
 
     /// Performs a real to complex forward FFT
-    public func forward<M: LinearType where M.Element == Double>(input: M) -> ComplexArray<Double> {
+    public func forward<M: LinearType where M.Element == Double>(_ input: M) -> ComplexArray<Double> {
         let lengthLog2 = vDSP_Length(log2(Double(input.count)))
         let length = vDSP_Length(exp2(Double(lengthLog2)))
         var results = ComplexArray<Double>(count: Int(length) / 2)
@@ -50,7 +50,7 @@ public class FFTDouble {
     }
 
     /// Performs a real to complex forward FFT
-    public func forward<M: LinearType where M.Element == Double>(input: M, inout results: ComplexArray<Double>) {
+    public func forward<M: LinearType where M.Element == Double>(_ input: M, results: inout ComplexArray<Double>) {
         let lengthLog2 = vDSP_Length(log2(Double(input.count)))
         let length = vDSP_Length(exp2(Double(lengthLog2)))
         precondition(length <= maxLength, "Input should have at most \(maxLength) elements")
@@ -74,7 +74,7 @@ public class FFTDouble {
     }
 
     /// Performs a real to real forward FFT by taking the square magnitudes of the complex result
-    public func forwardMags<M: LinearType where M.Element == Double>(input: M) -> ValueArray<Double> {
+    public func forwardMags<M: LinearType where M.Element == Double>(_ input: M) -> ValueArray<Double> {
         let lengthLog2 = vDSP_Length(log2(Double(input.count)))
         let length = vDSP_Length(exp2(Double(lengthLog2)))
         var results = ValueArray<Double>(count: Int(length) / 2)
@@ -83,7 +83,7 @@ public class FFTDouble {
     }
 
     /// Performs a real to real forward FFT by taking the square magnitudes of the complex result
-    public func forwardMags<M: LinearType where M.Element == Double>(input: M, inout results: ValueArray<Double>) {
+    public func forwardMags<M: LinearType where M.Element == Double>(_ input: M, results: inout ValueArray<Double>) {
         let lengthLog2 = vDSP_Length(log2(Double(input.count)))
         let length = vDSP_Length(exp2(Double(lengthLog2)))
         precondition(length <= maxLength, "Input should have at most \(maxLength) elements")
@@ -116,7 +116,7 @@ public class FFTFloat {
     public init(inputLength: Int) {
         let maxLengthLog2 = vDSP_Length(ceil(log2(Float(inputLength))))
         maxLength = vDSP_Length(exp2(Float(maxLengthLog2)))
-        setup = vDSP_create_fftsetupD(maxLengthLog2, FFTRadix(kFFTRadix2))
+        setup = vDSP_create_fftsetupD(maxLengthLog2, FFTRadix(kFFTRadix2))!
 
         real = ValueArray<Float>(count: Int(maxLength))
         imag = ValueArray<Float>(count: Int(maxLength))
@@ -127,7 +127,7 @@ public class FFTFloat {
     }
 
     /// Performs a real to complex forward FFT
-    public func forward<M: LinearType where M.Element == Float>(input: M) -> ComplexArray<Float> {
+    public func forward<M: LinearType where M.Element == Float>(_ input: M) -> ComplexArray<Float> {
         let lengthLog2 = vDSP_Length(log2(Float(input.count)))
         let length = vDSP_Length(exp2(Float(lengthLog2)))
         precondition(length <= maxLength, "Input should have at most \(maxLength) elements")
@@ -150,7 +150,7 @@ public class FFTFloat {
     }
 
     /// Performs a real to real forward FFT by taking the square magnitudes of the complex result
-    public func forwardMags<M: LinearType where M.Element == Float>(input: M) -> ValueArray<Float> {
+    public func forwardMags<M: LinearType where M.Element == Float>(_ input: M) -> ValueArray<Float> {
         let lengthLog2 = vDSP_Length(log2(Float(input.count)))
         let length = vDSP_Length(exp2(Float(lengthLog2)))
         precondition(length <= maxLength, "Input should have at most \(maxLength) elements")

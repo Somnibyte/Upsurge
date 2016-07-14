@@ -27,19 +27,19 @@ public class Tensor<Element: Value>: MutableTensorType, Equatable {
 
     public var elements: ValueArray<Element>
 
-    public func withUnsafeBufferPointer<R>(@noescape body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeBufferPointer<R>(_ body: @noescape(UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeBufferPointer(body)
     }
 
-    public func withUnsafePointer<R>(@noescape body: (UnsafePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafePointer<R>(_ body: @noescape(UnsafePointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafePointer(body)
     }
 
-    public func withUnsafeMutableBufferPointer<R>(@noescape body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBufferPointer<R>(_ body: @noescape(UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeMutableBufferPointer(body)
     }
 
-    public func withUnsafeMutablePointer<R>(@noescape body: (UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutablePointer<R>(_ body: @noescape(UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeMutablePointer(body)
     }
     
@@ -94,17 +94,17 @@ public class Tensor<Element: Value>: MutableTensorType, Equatable {
 
     public subscript(indices: Index) -> Element {
         get {
-            var index = [Int](count: dimensions.count, repeatedValue: 0)
-            let indexReplacementRage: Range<Int> = dimensions.count - indices.count..<dimensions.count
-            index.replaceRange(indexReplacementRage, with: indices)
+            var index = [Int](repeating: 0, count: dimensions.count)
+            let indexReplacementRage = dimensions.count - indices.count ... dimensions.count - 1
+            index.replaceSubrange(indexReplacementRage, with: indices)
             assert(indexIsValid(index))
             let elementsIndex = linearIndex(index)
             return elements[elementsIndex]
         }
         set {
-            var index = [Int](count: dimensions.count, repeatedValue: 0)
-            let indexReplacementRage: Range<Int> = dimensions.count - indices.count..<dimensions.count
-            index.replaceRange(indexReplacementRage, with: indices)
+            var index = [Int](repeating: 0, count: dimensions.count)
+            let indexReplacementRage = dimensions.count - indices.count ... dimensions.count - 1
+            index.replaceSubrange(indexReplacementRage, with: indices)
             assert(indexIsValid(index))
             let elementsIndex = linearIndex(index)
             elements[elementsIndex] = newValue
@@ -144,7 +144,7 @@ public class Tensor<Element: Value>: MutableTensorType, Equatable {
         }
     }
     
-    public func reshape(span: Span) {
+    public func reshape(_ span: Span) {
         precondition(span.count == self.span.count)
         self.span = span
     }
@@ -153,7 +153,7 @@ public class Tensor<Element: Value>: MutableTensorType, Equatable {
         return Tensor(self)
     }
     
-    func spanIsValid(subSpan: Span) -> Bool {
+    func spanIsValid(_ subSpan: Span) -> Bool {
         let span = Span(zeroTo: dimensions)
         return span.contains(subSpan)
     }
@@ -167,11 +167,11 @@ extension Tensor {
      
      - Precondition: All but the last two intervals must be a specific index, not a range. The last interval must either span the full dimension, or the second-last interval count must be 1.
      */
-    func asMatrix(span: Span) -> TwoDimensionalTensorSlice<Element> {
+    func asMatrix(_ span: Span) -> TwoDimensionalTensorSlice<Element> {
         return TwoDimensionalTensorSlice(base: self, span: span)
     }
     
-    public func asMatrix(intervals: IntervalType...) -> TwoDimensionalTensorSlice<Element> {
+    public func asMatrix(_ intervals: IntervalType...) -> TwoDimensionalTensorSlice<Element> {
         let baseSpan = Span(zeroTo: dimensions)
         let matrixSpan = Span(base: baseSpan, intervals: intervals)
         return asMatrix(matrixSpan)
@@ -181,7 +181,7 @@ extension Tensor {
 
 // MARK: -
 
-public func swap<T>(lhs: Tensor<T>, rhs: Tensor<T>) {
+public func swap<T>(_ lhs: Tensor<T>, rhs: Tensor<T>) {
     swap(&lhs.span, &rhs.span)
     swap(&lhs.elements, &rhs.elements)
 }

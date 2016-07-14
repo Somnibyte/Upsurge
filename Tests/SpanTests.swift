@@ -22,8 +22,8 @@ import XCTest
 @testable import Upsurge
 
 class RangedIndexTests: XCTestCase {
-    var rangedDimension: Range<Int>?
-    var indexedDimension: Range<Int>?
+    var rangedDimension: CountableClosedRange<Int>?
+    var indexedDimension: CountableClosedRange<Int>?
     var rangedIndex: Span?
     
     override func setUp() {

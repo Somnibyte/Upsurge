@@ -49,24 +49,32 @@ public class ComplexArray<T: Real>: MutableLinearType, ArrayLiteralConvertible  
     public var step: Index {
         return 1
     }
+
+    public func index(after i: Index) -> Index {
+        return i + 1
+    }
+
+    public func formIndex(after i: inout Index) {
+        i += 1
+    }
     
     public var span: Span {
         return Span(zeroTo: [endIndex])
     }
 
-    public func withUnsafeBufferPointer<R>(@noescape body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeBufferPointer<R>(_ body: @noescape(UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeBufferPointer(body)
     }
 
-    public func withUnsafePointer<R>(@noescape body: (UnsafePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafePointer<R>(_ body: @noescape(UnsafePointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafePointer(body)
     }
 
-    public func withUnsafeMutableBufferPointer<R>(@noescape body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBufferPointer<R>(_ body: @noescape(UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeMutableBufferPointer(body)
     }
 
-    public func withUnsafeMutablePointer<R>(@noescape body: (UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutablePointer<R>(_ body: @noescape(UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
         return try elements.withUnsafeMutablePointer(body)
     }
 
@@ -166,15 +174,15 @@ public class ComplexArray<T: Real>: MutableLinearType, ArrayLiteralConvertible  
         return ComplexArray(elements)
     }
 
-    public func append(value: Element) {
+    public func append(_ value: Element) {
         elements.append(value)
     }
 
-    public func appendContentsOf<C : CollectionType where C.Generator.Element == Element>(values: C) {
+    public func appendContentsOf<C : Collection where C.Iterator.Element == Element>(_ values: C) {
         elements.appendContentsOf(values)
     }
 
-    public func replaceRange<C: CollectionType where C.Generator.Element == Element>(subRange: Range<Index>, with newElements: C) {
+    public func replaceRange<C: Collection where C.Iterator.Element == Element>(_ subRange: Range<Index>, with newElements: C) {
         elements.replaceRange(subRange, with: newElements)
     }
 

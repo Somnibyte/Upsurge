@@ -31,12 +31,12 @@ public func gemm<
     QTA.Element == Double,
     QTB.Element == Double,
     QTC.Element == Double
->(α: Double, a: QTA, b: QTB, β: Double, inout c: QTC) {
+>(_ α: Double, a: QTA, b: QTB, β: Double, c: inout QTC) {
     precondition(a.columns == b.rows, "Input matrices dimensions not compatible with multiplication")
     precondition(a.rows == c.rows, "Output matrix dimensions not compatible with multiplication")
     precondition(b.columns == c.columns, "Output matrix dimensions not compatible with multiplication")
 
-    let order = c.arrangement == .RowMajor ? CblasRowMajor : CblasColMajor
+    let order = c.arrangement == .rowMajor ? CblasRowMajor : CblasColMajor
     let atrans = a.arrangement == c.arrangement ? CblasNoTrans : CblasTrans
     let btrans = b.arrangement == c.arrangement ? CblasNoTrans : CblasTrans
 
@@ -46,14 +46,14 @@ public func gemm<
 }
 
 /// Invert a square matrix
-public func inv<M: QuadraticType where M.Element == Double>(x: M) -> Matrix<Double> {
+public func inv<M: QuadraticType where M.Element == Double>(_ x: M) -> Matrix<Double> {
     precondition(x.rows == x.columns, "Matrix must be square")
 
     var results = Matrix<Double>(x)
 
-    var ipiv = [__CLPK_integer](count: x.rows * x.rows, repeatedValue: 0)
+    var ipiv = [__CLPK_integer](repeating: 0, count: x.rows * x.rows)
     var lwork = __CLPK_integer(x.columns * x.columns)
-    var work = [CDouble](count: Int(lwork), repeatedValue: 0.0)
+    var work = [CDouble](repeating: 0.0, count: Int(lwork))
     var error: __CLPK_integer = 0
     var nc = __CLPK_integer(x.columns)
 
@@ -67,7 +67,7 @@ public func inv<M: QuadraticType where M.Element == Double>(x: M) -> Matrix<Doub
     return results
 }
 
-public func transpose<M: QuadraticType where M.Element == Double>(x: M) -> Matrix<Double> {
+public func transpose<M: QuadraticType where M.Element == Double>(_ x: M) -> Matrix<Double> {
     var results = Matrix<Double>(rows: x.columns, columns: x.rows, repeatedValue: 0.0)
     withPointers(x, &results) { xp, rp in
         vDSP_mtransD(xp, x.step, rp, results.step, vDSP_Length(results.rows), vDSP_Length(results.columns))
@@ -77,7 +77,7 @@ public func transpose<M: QuadraticType where M.Element == Double>(x: M) -> Matri
 
 // MARK: - Operators
 
-public func +=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Double, MR.Element == Double>(inout lhs: ML, rhs: MR) {
+public func +=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Double, MR.Element == Double>(lhs: inout ML, rhs: MR) {
     precondition(lhs.rows == rhs.rows && lhs.columns == rhs.columns, "Matrix dimensions not compatible with addition")
     assert(lhs.span ≅ rhs.span)
     
@@ -95,7 +95,7 @@ public func +<ML: QuadraticType, MR: QuadraticType where ML.Element == Double, M
     return results
 }
 
-public func -=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Double, MR.Element == Double>(inout lhs: ML, rhs: MR) {
+public func -=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Double, MR.Element == Double>(lhs: inout ML, rhs: MR) {
     precondition(lhs.rows == rhs.rows && lhs.columns == rhs.columns, "Matrix dimensions not compatible with subtraction")
     assert(lhs.span ≅ rhs.span)
     
@@ -113,7 +113,7 @@ public func -<ML: QuadraticType, MR: QuadraticType where ML.Element == Double, M
     return results
 }
 
-public func *=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Double, MR.Element == Double>(inout lhs: ML, rhs: MR) {
+public func *=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Double, MR.Element == Double>(lhs: inout ML, rhs: MR) {
     // lhs can't be used for both input and output so it needs to be copied
     let a = Matrix<Double>(lhs)
     gemm(1.0, a: a, b: rhs, β: 0.0, c: &lhs)
@@ -125,7 +125,7 @@ public func *<ML: QuadraticType, MR: QuadraticType where ML.Element == Double, M
     return results
 }
 
-public func *=<ML: MutableQuadraticType where ML.Element == Double>(inout lhs: ML, rhs: Double) {
+public func *=<ML: MutableQuadraticType where ML.Element == Double>(lhs: inout ML, rhs: Double) {
     for index in lhs.span {
         lhs[index] *= rhs
     }
@@ -155,12 +155,12 @@ public func gemm<
     QTA.Element == Float,
     QTB.Element == Float,
     QTC.Element == Float
-    >(α: Float, a: QTA, b: QTB, β: Float, inout c: QTC) {
+    >(_ α: Float, a: QTA, b: QTB, β: Float, c: inout QTC) {
         precondition(a.columns == b.rows, "Input matrices dimensions not compatible with multiplication")
         precondition(a.rows == c.rows, "Output matrix dimensions not compatible with multiplication")
         precondition(b.columns == c.columns, "Output matrix dimensions not compatible with multiplication")
 
-        let order = c.arrangement == .RowMajor ? CblasRowMajor : CblasColMajor
+        let order = c.arrangement == .rowMajor ? CblasRowMajor : CblasColMajor
         let atrans = a.arrangement == c.arrangement ? CblasNoTrans : CblasTrans
         let btrans = b.arrangement == c.arrangement ? CblasNoTrans : CblasTrans
         withPointers(a, b, &c) { pa, pb, pc in
@@ -169,14 +169,14 @@ public func gemm<
 }
 
 /// Invert a square matrix
-public func inv<M: QuadraticType where M.Element == Float>(x: M) -> Matrix<Float> {
+public func inv<M: QuadraticType where M.Element == Float>(_ x: M) -> Matrix<Float> {
     precondition(x.rows == x.columns, "Matrix must be square")
 
     var results = Matrix<Float>(x)
 
-    var ipiv = [__CLPK_integer](count: x.rows * x.rows, repeatedValue: 0)
+    var ipiv = [__CLPK_integer](repeating: 0, count: x.rows * x.rows)
     var lwork = __CLPK_integer(x.columns * x.columns)
-    var work = [CFloat](count: Int(lwork), repeatedValue: 0.0)
+    var work = [CFloat](repeating: 0.0, count: Int(lwork))
     var error: __CLPK_integer = 0
     var nc = __CLPK_integer(x.columns)
 
@@ -190,7 +190,7 @@ public func inv<M: QuadraticType where M.Element == Float>(x: M) -> Matrix<Float
     return results
 }
 
-public func transpose<M: QuadraticType where M.Element == Float>(x: M) -> Matrix<Float> {
+public func transpose<M: QuadraticType where M.Element == Float>(_ x: M) -> Matrix<Float> {
     var results = Matrix<Float>(rows: x.columns, columns: x.rows, repeatedValue: 0.0)
     withPointers(x, &results) { xp, rp in
         vDSP_mtrans(xp, x.step, rp, results.step, vDSP_Length(results.rows), vDSP_Length(results.columns))
@@ -200,7 +200,7 @@ public func transpose<M: QuadraticType where M.Element == Float>(x: M) -> Matrix
 
 // MARK: - Operators
 
-public func +=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Float, MR.Element == Float>(inout lhs: ML, rhs: MR) {
+public func +=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Float, MR.Element == Float>(lhs: inout ML, rhs: MR) {
     precondition(lhs.rows == rhs.rows && lhs.columns == rhs.columns, "Matrix dimensions not compatible with addition")
     assert(lhs.span ≅ rhs.span)
 
@@ -218,7 +218,7 @@ public func +<ML: QuadraticType, MR: QuadraticType where ML.Element == Float, MR
     return results
 }
 
-public func -=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Float, MR.Element == Float>(inout lhs: ML, rhs: MR) {
+public func -=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Float, MR.Element == Float>(lhs: inout ML, rhs: MR) {
     precondition(lhs.rows == rhs.rows && lhs.columns == rhs.columns, "Matrix dimensions not compatible with subtraction")
     assert(lhs.span ≅ rhs.span)
 
@@ -236,7 +236,7 @@ public func -<ML: QuadraticType, MR: QuadraticType where ML.Element == Float, MR
     return results
 }
 
-public func *=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Float, MR.Element == Float>(inout lhs: ML, rhs: MR) {
+public func *=<ML: MutableQuadraticType, MR: QuadraticType where ML.Element == Float, MR.Element == Float>(lhs: inout ML, rhs: MR) {
     // lhs can't be used for both input and output so it needs to be copied
     let a = Matrix<Float>(lhs)
     gemm(1.0, a: a, b: rhs, β: 0.0, c: &lhs)
@@ -248,7 +248,7 @@ public func *<ML: QuadraticType, MR: QuadraticType where ML.Element == Float, MR
     return results
 }
 
-public func *=<ML: MutableQuadraticType where ML.Element == Float>(inout lhs: ML, rhs: Float) {
+public func *=<ML: MutableQuadraticType where ML.Element == Float>(lhs: inout ML, rhs: Float) {
     for index in lhs.span {
         lhs[index] *= rhs
     }

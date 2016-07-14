@@ -22,7 +22,7 @@ import Accelerate
 
 // MARK: - Double
 
-public func +=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(inout lhs: ML, rhs: MR) {
+public func +=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(lhs: inout ML, rhs: MR) {
     assert(lhs.count >= rhs.count)
     let count = min(lhs.count, rhs.count)
     withPointers(rhs, &lhs) { rhsp, lhsp in
@@ -39,7 +39,7 @@ public func +<ML: LinearType, MR: LinearType where ML.Element == Double, MR.Elem
     return results
 }
 
-public func +=<ML: MutableLinearType where ML.Element == Double>(inout lhs: ML, rhs: Double) {
+public func +=<ML: MutableLinearType where ML.Element == Double>(lhs: inout ML, rhs: Double) {
     withPointer(&lhs) { lhsp in
         var scalar = rhs
         vDSP_vsaddD(lhsp + lhs.startIndex, lhs.step, &scalar, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
@@ -59,7 +59,7 @@ public func +<ML: LinearType, MR: LinearType where ML.Element == Double, MR.Elem
     return rhs + lhs
 }
 
-public func -=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(inout lhs: ML, rhs: MR) {
+public func -=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(lhs: inout ML, rhs: MR) {
     let count = min(lhs.count, rhs.count)
     withPointers(rhs, &lhs) { rhsp, lhsp in
     vDSP_vsubD(rhsp + rhs.startIndex, rhs.step, lhsp + lhs.startIndex, lhs.step, lhsp + lhs.startIndex, lhs.step, vDSP_Length(count))
@@ -75,7 +75,7 @@ public func -<ML: LinearType, MR: LinearType where ML.Element == Double, MR.Elem
     return results
 }
 
-public func -=<ML: MutableLinearType where ML.Element == Double>(inout lhs: ML, rhs: Double) {
+public func -=<ML: MutableLinearType where ML.Element == Double>(lhs: inout ML, rhs: Double) {
     var scalar: Double = -rhs
     withPointer(&lhs) { lhsp in
         vDSP_vsaddD(lhsp + lhs.startIndex, lhs.step, &scalar, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
@@ -101,7 +101,7 @@ public func -<ML: LinearType where ML.Element == Double>(lhs: Double, rhs: ML) -
     return results
 }
 
-public func /=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(inout lhs: ML, rhs: MR) {
+public func /=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(lhs: inout ML, rhs: MR) {
     let count = min(lhs.count, rhs.count)
     withPointers(rhs, &lhs) { rhsp, lhsp in
         vDSP_vdivD(rhsp + rhs.startIndex, rhs.step, lhsp + lhs.startIndex, lhs.step, lhsp + lhs.startIndex, lhs.step, vDSP_Length(count))
@@ -117,7 +117,7 @@ public func /<ML: LinearType, MR: LinearType where ML.Element == Double, MR.Elem
     return results
 }
 
-public func /=<ML: MutableLinearType where ML.Element == Double>(inout lhs: ML, rhs: Double) {
+public func /=<ML: MutableLinearType where ML.Element == Double>(lhs: inout ML, rhs: Double) {
     withPointer(&lhs) { lhsp in
         var scalar = rhs
         vDSP_vsdivD(lhsp + lhs.startIndex, lhs.step, &scalar, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
@@ -142,7 +142,7 @@ public func /<ML: LinearType where ML.Element == Double>(lhs: Double, rhs: ML) -
     return results
 }
 
-public func *=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(inout lhs: ML, rhs: MR) {
+public func *=<ML: MutableLinearType, MR: LinearType where ML.Element == Double, MR.Element == Double>(lhs: inout ML, rhs: MR) {
     withPointers(rhs, &lhs) { rhsp, lhsp in
         vDSP_vmulD(lhsp + lhs.startIndex, lhs.step, rhsp + rhs.startIndex, rhs.step, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
     }
@@ -156,7 +156,7 @@ public func *<ML: LinearType, MR: LinearType where ML.Element == Double, MR.Elem
     return results
 }
 
-public func *=<ML: MutableLinearType where ML.Element == Double>(inout lhs: ML, rhs: Double) {
+public func *=<ML: MutableLinearType where ML.Element == Double>(lhs: inout ML, rhs: Double) {
     var rhs = rhs
     withPointer(&lhs) { lhsp in
         vDSP_vsmulD(lhsp + lhs.startIndex, lhs.step, &rhs, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
@@ -192,7 +192,7 @@ public func •<ML: LinearType, MR: LinearType where ML.Element == Double, MR.El
 
 // MARK: - Float
 
-public func +=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(inout lhs: ML, rhs: MR) {
+public func +=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(lhs: inout ML, rhs: MR) {
     assert(lhs.count >= rhs.count)
     let count = min(lhs.count, rhs.count)
     withPointers(rhs, &lhs) { rhsp, lhsp in
@@ -209,7 +209,7 @@ public func +<ML: LinearType, MR: LinearType where ML.Element == Float, MR.Eleme
     return results
 }
 
-public func +=<ML: MutableLinearType where ML.Element == Float>(inout lhs: ML, rhs: Float) {
+public func +=<ML: MutableLinearType where ML.Element == Float>(lhs: inout ML, rhs: Float) {
     withPointer(&lhs) { lhsp in
         var scalar = rhs
         vDSP_vsadd(lhsp + lhs.startIndex, lhs.step, &scalar, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
@@ -229,7 +229,7 @@ public func +<ML: LinearType, MR: LinearType where ML.Element == Float, MR.Eleme
     return rhs + lhs
 }
 
-public func -=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(inout lhs: ML, rhs: MR) {
+public func -=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(lhs: inout ML, rhs: MR) {
     let count = min(lhs.count, rhs.count)
     withPointers(rhs, &lhs) { rhsp, lhsp in
         vDSP_vsub(rhsp + rhs.startIndex, rhs.step, lhsp + lhs.startIndex, lhs.step, lhsp + lhs.startIndex, lhs.step, vDSP_Length(count))
@@ -245,7 +245,7 @@ public func -<ML: LinearType, MR: LinearType where ML.Element == Float, MR.Eleme
     return results
 }
 
-public func -=<ML: MutableLinearType where ML.Element == Float>(inout lhs: ML, rhs: Float) {
+public func -=<ML: MutableLinearType where ML.Element == Float>(lhs: inout ML, rhs: Float) {
     withPointer(&lhs) { lhsp in
         var scalar: Float = -rhs
         vDSP_vsadd(lhsp + lhs.startIndex, lhs.step, &scalar, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
@@ -271,7 +271,7 @@ public func -<ML: LinearType where ML.Element == Float>(lhs: Float, rhs: ML) -> 
     return results
 }
 
-public func /=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(inout lhs: ML, rhs: MR) {
+public func /=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(lhs: inout ML, rhs: MR) {
     let count = min(lhs.count, rhs.count)
     withPointers(rhs, &lhs) { rhsp, lhsp in
         vDSP_vdiv(rhsp + rhs.startIndex, rhs.step, lhsp + lhs.startIndex, lhs.step, lhsp + lhs.startIndex, lhs.step, vDSP_Length(count))
@@ -287,7 +287,7 @@ public func /<ML: LinearType, MR: LinearType where ML.Element == Float, MR.Eleme
     return results
 }
 
-public func /=<ML: MutableLinearType where ML.Element == Float>(inout lhs: ML, rhs: Float) {
+public func /=<ML: MutableLinearType where ML.Element == Float>(lhs: inout ML, rhs: Float) {
     withPointer(&lhs) { lhsp in
         var scalar = rhs
         vDSP_vsdiv(lhsp + lhs.startIndex, lhs.step, &scalar, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
@@ -312,7 +312,7 @@ public func /<ML: LinearType where ML.Element == Float>(lhs: Float, rhs: ML) -> 
     return results
 }
 
-public func *=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(inout lhs: ML, rhs: MR) {
+public func *=<ML: MutableLinearType, MR: LinearType where ML.Element == Float, MR.Element == Float>(lhs: inout ML, rhs: MR) {
     withPointers(rhs, &lhs) { rhsp, lhsp in
         vDSP_vmul(lhsp + lhs.startIndex, lhs.step, rhsp + rhs.startIndex, rhs.step, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))
         }
@@ -326,7 +326,7 @@ public func *<ML: LinearType, MR: LinearType where ML.Element == Float, MR.Eleme
     return results
 }
 
-public func *=<ML: MutableLinearType where ML.Element == Float>(inout lhs: ML, rhs: Float) {
+public func *=<ML: MutableLinearType where ML.Element == Float>(lhs: inout ML, rhs: Float) {
     withPointer(&lhs) { lhsp in
         var scalar = rhs
         vDSP_vsmul(lhsp + lhs.startIndex, lhs.step, &scalar, lhsp + lhs.startIndex, lhs.step, vDSP_Length(lhs.count))

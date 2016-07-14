@@ -20,17 +20,17 @@
 
 
 /// Span is a collection of Ranges to specify a multi-dimensional slice of a Tensor.
-public struct Span: ArrayLiteralConvertible, SequenceType {
-    public typealias Element = Range<Int>
+public struct Span: ArrayLiteralConvertible, Sequence {
+    public typealias Element = CountableClosedRange<Int>
     
     var ranges: [Element]
 
     var startIndex: [Int] {
-        return ranges.map{ $0.startIndex }
+        return ranges.map{ $0.lowerBound }
     }
 
     var endIndex: [Int] {
-        return ranges.map{ $0.endIndex }
+        return ranges.map{ $0.upperBound + 1 }
     }
     
     var count: Int {
@@ -57,10 +57,10 @@ public struct Span: ArrayLiteralConvertible, SequenceType {
         assert(base.contains(intervals))
         var ranges = [Element]()
         for i in 0..<intervals.count {
-            let start = intervals[i].start ?? base[i].startIndex
-            let end = intervals[i].end ?? base[i].endIndex
-            assert(base[i].startIndex <= start && end <= base[i].endIndex)
-            ranges.append(start..<end)
+            let start = intervals[i].start ?? base[i].lowerBound
+            let end = intervals[i].end ?? base[i].upperBound + 1
+            assert(base[i].lowerBound <= start && end <= base[i].upperBound + 1)
+            ranges.append(start ... end - 1)
         }
         self.init(ranges: ranges)
     }
@@ -71,18 +71,18 @@ public struct Span: ArrayLiteralConvertible, SequenceType {
             let start = intervals[i].start ?? 0
             let end = intervals[i].end ?? dimensions[i]
             assert(0 <= start && end <= dimensions[i])
-            ranges.append(start..<end)
+            ranges.append(start ... end - 1)
         }
         self.init(ranges: ranges)
     }
     
     init(zeroTo dimensions: [Int]) {
-        let start = [Int](count: dimensions.count, repeatedValue: 0)
+        let start = [Int](repeating: 0, count: dimensions.count)
         self.init(start: start, end: dimensions)
     }
     
     init(start: [Int], end: [Int]) {
-        ranges = zip(start, end).map{ $0..<$1 }
+        ranges = zip(start, end).map{ $0...$1 - 1 }
     }
     
     init(start: [Int], length: [Int]) {
@@ -90,15 +90,23 @@ public struct Span: ArrayLiteralConvertible, SequenceType {
         self.init(start: start, end: end)
     }
     
-    public func generate() -> SpanGenerator {
+    public func makeIterator() -> SpanGenerator {
         return SpanGenerator(span: self)
     }
     
     subscript(index: Int) -> Element {
         return self.ranges[index]
     }
+
+    subscript(range: ClosedRange<Int>) -> ArraySlice<Element> {
+        return self.ranges[range]
+    }
+
+    subscript(range: Range<Int>) -> ArraySlice<Element> {
+        return self.ranges[range]
+    }
     
-    func contains(other: Span) -> Bool {
+    func contains(_ other: Span) -> Bool {
         for i in 0..<dimensions.count {
             if other[i].startIndex < self[i].startIndex || self[i].endIndex < other[i].endIndex {
                 return false
@@ -107,12 +115,12 @@ public struct Span: ArrayLiteralConvertible, SequenceType {
         return true
     }
     
-    func contains(intervals: [IntervalType]) -> Bool {
+    func contains(_ intervals: [IntervalType]) -> Bool {
         assert(dimensions.count == intervals.count)
         for i in 0..<dimensions.count {
-            let start = intervals[i].start ?? self[i].startIndex
-            let end = intervals[i].end ?? self[i].endIndex
-            if start < self[i].startIndex || self[i].endIndex < end {
+            let start = intervals[i].start ?? self[i].lowerBound
+            let end = intervals[i].end ?? self[i].upperBound + 1
+            if start < self[i].lowerBound || self[i].upperBound + 1 < end {
                 return false
             }
         }
@@ -120,7 +128,7 @@ public struct Span: ArrayLiteralConvertible, SequenceType {
     }
 }
 
-public class SpanGenerator: GeneratorType {
+public class SpanGenerator: IteratorProtocol {
     private var span: Span
     private var presentIndex: [Int]
     private var kill = false
@@ -134,10 +142,10 @@ public class SpanGenerator: GeneratorType {
         return incrementIndex(presentIndex.count - 1)
     }
     
-    func incrementIndex(position: Int) -> [Int]? {
+    func incrementIndex(_ position: Int) -> [Int]? {
         if position < 0 || span.count <= position || kill {
             return nil
-        } else if presentIndex[position] + 1 < span[position].endIndex {
+        } else if presentIndex[position] < span[position].upperBound {
             let result = presentIndex
             presentIndex[position] += 1
             return result
@@ -146,7 +154,7 @@ public class SpanGenerator: GeneratorType {
                 kill = true
                 return presentIndex
             }
-            presentIndex[position] = span[position].startIndex
+            presentIndex[position] = span[position].lowerBound
             return result
         }
     }

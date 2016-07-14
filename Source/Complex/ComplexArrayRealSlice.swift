@@ -29,28 +29,28 @@ public struct ComplexArrayRealSlice<T: Real>: MutableLinearType {
     public var endIndex: Int
     public var step: Int
     public var span: Span {
-        return Span(ranges: [startIndex..<endIndex])
+        return Span(ranges: [startIndex ... endIndex - 1])
     }
 
-    public func withUnsafeBufferPointer<R>(@noescape body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeBufferPointer<R>(_ body: @noescape(UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeBufferPointer { pointer in
             return try body(UnsafeBufferPointer(start: UnsafePointer<Element>(pointer.baseAddress), count: count))
         }
     }
 
-    public func withUnsafePointer<R>(@noescape body: (UnsafePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafePointer<R>(_ body: @noescape(UnsafePointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafePointer { pointer in
             return try body(UnsafePointer<Element>(pointer))
         }
     }
 
-    public func withUnsafeMutableBufferPointer<R>(@noescape body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBufferPointer<R>(_ body: @noescape(UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeMutableBufferPointer { pointer in
             return try body(UnsafeMutableBufferPointer(start: UnsafeMutablePointer<Element>(pointer.baseAddress), count: count))
         }
     }
 
-    public func withUnsafeMutablePointer<R>(@noescape body: (UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
+    public func withUnsafeMutablePointer<R>(_ body: @noescape(UnsafeMutablePointer<Element>) throws -> R) rethrows -> R {
         return try base.withUnsafeMutablePointer { pointer in
             return try body(UnsafeMutablePointer<Element>(pointer))
         }
@@ -108,6 +108,14 @@ public struct ComplexArrayRealSlice<T: Real>: MutableLinearType {
                 self[i] = newValue[newValue.startIndex + i - start]
             }
         }
+    }
+
+    public func index(after i: Index) -> Index {
+        return i + 1
+    }
+
+    public func formIndex(after i: inout Index) {
+        i += 1
     }
 }
 
